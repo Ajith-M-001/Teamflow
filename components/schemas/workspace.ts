@@ -18,5 +18,5 @@ export const workspaceSchema = z.object({
     ),
 });
 
-export type Workspace = z.infer<typeof workspaceSchema>;
+export type WorkspaceSchemaType = z.infer<typeof workspaceSchema>;
 export { WORKSPACE_NAME_LIMITS };
