@@ -7,6 +7,8 @@ import { requiredAuthMiddleware } from "@/app/middlewares/auth";
 import { requiredWorkspaceMiddleware } from "@/app/middlewares/workspace";
 import { workspaceSchema } from "@/components/schemas/workspace";
 import { init, Organizations } from "@kinde/management-api-js";
+import { standardSecurityMiddleware } from "../middlewares/arcjet/standard";
+import { heavyWriteSecurityMiddleware } from "../middlewares/arcjet/heavy-write";
 
 export const listWorkspaces = base
   .use(requiredAuthMiddleware)
@@ -51,6 +53,8 @@ export const listWorkspaces = base
 export const createWorkspaces = base
   .use(requiredAuthMiddleware)
   .use(requiredWorkspaceMiddleware)
+  .use(standardSecurityMiddleware)
+  .use(heavyWriteSecurityMiddleware)
   .route({
     method: "POST",
     path: "/workspaces",
