@@ -64,7 +64,11 @@ export function CreateWorkspace() {
       },
       onError: (error) => {
         console.error("Error creating workspace:", error);
-        toast.error("Error creating workspace, please try again!");
+        const message =
+          error?.message ||
+          "Error creating workspace, please try again!";
+
+        toast.error(message);
       },
     })
   );
