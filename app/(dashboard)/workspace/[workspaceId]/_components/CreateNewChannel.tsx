@@ -26,9 +26,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { orpc } from "@/lib/orpc";
+import { toast } from "sonner";
+import { isDefinedError } from "@orpc/client";
 
 export function CreateNewChannel() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const form = useForm<ChannelNameSchemaType>({
     resolver: zodResolver(ChannelNameSchema),
@@ -36,6 +42,32 @@ export function CreateNewChannel() {
       name: "",
     },
   });
+
+  const createChannelMutation = useMutation(
+    orpc.channel.create.mutationOptions({
+      onSuccess: (newChannel) => {
+        console.log("Channel created:", newChannel);
+        toast.success(`Channel ${newChannel.name} created successfully!`);
+        queryClient.invalidateQueries({
+          queryKey: orpc.channel.list.queryKey(),
+        });
+        form.reset();
+        setIsOpen(false);
+      },
+      onError: (error) => {
+        if (isDefinedError(error)) {
+          toast.error(error.message);
+          return;
+        }
+        console.error("Error creating channel:", error);
+        toast.error("Error creating channel, please try again!");
+      },
+    })
+  );
+
+  function onSubmit(values: ChannelNameSchemaType) {
+    createChannelMutation.mutate(values);
+  }
 
   const watchedName = form.watch("name");
   const transformedName = watchedName ? transformChannelName(watchedName) : "";
@@ -55,7 +87,7 @@ export function CreateNewChannel() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(() => {})} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               name="name"
               control={form.control}
@@ -77,7 +109,16 @@ export function CreateNewChannel() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Submit</Button>
+            <Button disabled={createChannelMutation.isPending} type="submit">
+              {createChannelMutation.isPending ? (
+                <>
+                  <span className="loading loading-spinner" />
+                  &nbsp;Creating Channel...
+                </>
+              ) : (
+                "Create New Channel"
+              )}
+            </Button>
           </form>
         </Form>
       </DialogContent>

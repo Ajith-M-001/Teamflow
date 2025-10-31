@@ -11,7 +11,7 @@ const WorkspaceLayout = async ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="flex w-full h-screen">
-      <div className="flex h-full w-16 flex-col items-center bg-secondary py-3 px-2 border-r border-border">
+      <div className="flex overflow-y-auto h-full w-16 flex-col items-center bg-secondary py-3 px-2 border-r border-border">
         <HydrateClient client={queryClient}>
           <WorkspaceList />
         </HydrateClient>
@@ -24,7 +24,7 @@ const WorkspaceLayout = async ({ children }: { children: ReactNode }) => {
           </HydrateClient>
         </div>
       </div>
-      {children}
+        {children}
     </div>
   );
 };
