@@ -1,0 +1,24 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma"
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+    
+  workspaceId String   // Kinde org ID
+  createdById String   // Kinde user ID
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
