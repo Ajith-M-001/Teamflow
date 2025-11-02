@@ -30,11 +30,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
 import { toast } from "sonner";
 import { isDefinedError } from "@orpc/client";
+import { useParams, useRouter } from "next/navigation";
 
 export function CreateNewChannel() {
   const [isOpen, setIsOpen] = useState(false);
+  const { workspaceId } = useParams<{ workspaceId: string }>();
 
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const form = useForm<ChannelNameSchemaType>({
     resolver: zodResolver(ChannelNameSchema),
@@ -48,11 +51,15 @@ export function CreateNewChannel() {
       onSuccess: (newChannel) => {
         console.log("Channel created:", newChannel);
         toast.success(`Channel ${newChannel.name} created successfully!`);
+
         queryClient.invalidateQueries({
           queryKey: orpc.channel.list.queryKey(),
         });
         form.reset();
         setIsOpen(false);
+
+        console.log("fsdfasdf", `/workspace/${workspaceId}/channel/${newChannel.id}`);
+        router.push(`/workspace/${workspaceId}/channel/${newChannel.id}`);
       },
       onError: (error) => {
         if (isDefinedError(error)) {
