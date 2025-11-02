@@ -67,7 +67,7 @@ export function UserNav() {
         className="w-[200px]"
         align="end"
         side="right"
-        sideOffset={12}
+        sideOffset={16}
       >
         <DropdownMenuLabel className="flex items-center gap-3">
           <UserAvatar size="sm" user={user} />

@@ -11,14 +11,32 @@ generator client {
 }
 
 model Channel {
-  id          String   @id @default(uuid())
-  name        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-    
-  workspaceId String   // Kinde org ID
-  createdById String   // Kinde user ID
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String // Kinde org ID
+  createdById String // Kinde user ID
+
+  messages Message[] // ✅ 1-to-many relation
 
   @@unique([workspaceId, name])
   @@index([workspaceId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channelId String // ✅ Foreign key to Channel
+  channel   Channel @relation(fields: [channelId], references: [id])
+
+  authorId     String
+  authorEmail  String
+  authorName   String
+  authorAvatar String
 }
