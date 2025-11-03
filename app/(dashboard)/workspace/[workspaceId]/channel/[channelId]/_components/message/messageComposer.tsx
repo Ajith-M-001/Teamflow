@@ -5,14 +5,16 @@ import { Image, ImageIcon, Send } from "lucide-react";
 interface MessageComposerProps {
   value: string;
   onChange: (value: string) => void;
+  onSubmit: () => void
+  isSubmitting?: boolean
 }
-export function MessageComposer({ onChange, value }: MessageComposerProps) {
+export function MessageComposer({ onChange, value , onSubmit , isSubmitting}: MessageComposerProps) {
   return (
     <>
       <RichTextEditor
         field={{ onChange, value }}
         sendButton={
-          <Button type="button" size="sm">
+          <Button disabled={isSubmitting} type="button" size="sm" onClick={onSubmit}>
             <Send className="size-4 mr-1" />
             <span>Send</span>
           </Button>
