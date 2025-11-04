@@ -12,12 +12,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useState } from "react";
 import { MessageComposer } from "./messageComposer";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc";
 import { toast } from "sonner";
+import { useAttachmentUpload } from "@/hooks/use-attachment-upload";
 
 interface MessageInputFormProps {
   channelId: string;
@@ -25,6 +26,9 @@ interface MessageInputFormProps {
 
 export function MessageInputForm({ channelId }: MessageInputFormProps) {
   const queryClient = useQueryClient();
+  const [editorKey, setEditorKey] = useState(0);
+  const upload = useAttachmentUpload();
+
   const form = useForm<CreateMessageSchemaType>({
     resolver: zodResolver(createMessageSchema),
     defaultValues: {
@@ -36,12 +40,14 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
   const createMessageMutation = useMutation(
     orpc.message.create.mutationOptions({
       onSuccess: (newMessage) => {
-        form.reset();
+        form.reset({ channelId, content: "" });
+        setEditorKey((prevKey) => prevKey + 1);
         form.clearErrors();
+        upload.clearImage();
         toast.success("Message created successfully!");
         queryClient.invalidateQueries({
           queryKey: orpc.message.list.key(),
-        })
+        });
       },
       onError: (error) => {
         console.error("Error creating message:", error);
@@ -50,7 +56,10 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
   );
 
   function onSubmit(data: CreateMessageSchemaType) {
-    createMessageMutation.mutate(data);
+    createMessageMutation.mutate({
+      ...data,
+      imageUrl: upload.stagedUrl ?? undefined,
+    });
   }
   return (
     <Form {...form}>
@@ -62,6 +71,8 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
             <FormItem>
               <FormControl>
                 <MessageComposer
+                  upload={upload}
+                  key={editorKey}
                   value={field.value}
                   onChange={field.onChange}
                   onSubmit={() => onSubmit(form.getValues())}
