@@ -50,20 +50,73 @@ export function MessageList() {
     refetchOnWindowFocus: false,
   });
 
+  //scroll to the bottom when messages first load
   useEffect(() => {
     if (!hasInitialScrolled && data?.pages.length) {
       const el = scrollRef.current;
       if (el) {
-        el.scrollTop = el.scrollHeight;
+        bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
         setHasInitialScrolled(true);
         setIsAtBottom(true);
       }
     }
   }, [hasInitialScrolled, data?.pages.length]);
 
+  //keep view pinned to bottom to late content growth (e.g images)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const scrollToBottomIfNeeded = () => {
+      if (isAtBottom || !hasInitialScrolled) {
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({
+            block: "end",
+            behavior: "smooth",
+          });
+        });
+      }
+    };
+
+    const onImageLoad = (e: Event) => {
+      if (e.target instanceof HTMLImageElement) {
+        scrollToBottomIfNeeded();
+      }
+    };
+
+    el.addEventListener("load", onImageLoad, true);
+
+    //resize observer watch for size changes in the container
+    const resizeObserver = new ResizeObserver(() => {
+      scrollToBottomIfNeeded();
+    });
+
+    resizeObserver.observe(el);
+
+    //mutation observer watch for DOM changes
+    const mutationObserver = new MutationObserver(() => {
+      scrollToBottomIfNeeded();
+    });
+
+    mutationObserver.observe(el, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      el.removeEventListener("load", onImageLoad, true);
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [isAtBottom, hasInitialScrolled]);
+
   const items = useMemo(() => {
     return data?.pages.flatMap((page) => page.items) ?? [];
   }, [data]);
+
+  const isEmpty = !isLoading && !error && items?.length === 0;
 
   const isNearBottom = (el: HTMLDivElement) => {
     return el.scrollHeight - el.scrollTop - el.clientHeight <= 80;
@@ -108,15 +161,15 @@ export function MessageList() {
     lastItemRef.current = lastId;
   }, [items]);
 
-
   const scrollToBottom = () => {
     const el = scrollRef.current;
     if (!el) return;
 
-    el.scrollTop = el.scrollHeight;
+    bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+
     setNewMessages(false);
     setIsAtBottom(true);
-  }
+  };
 
   return (
     <div className="relative h-full">
@@ -125,15 +178,25 @@ export function MessageList() {
         ref={scrollRef}
         onScroll={handleScroll}
       >
-        {items?.map((msg) => (
-          <MessageItem key={msg.id} message={msg} />
-        ))}
+        {isEmpty ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <p className="text-sm text-muted-foreground">No messages yet.</p>
+          </div>
+        ) : (
+          items?.map((msg) => <MessageItem key={msg.id} message={msg} />)
+        )}
 
         <div ref={bottomRef}></div>
       </div>
 
       {newMessages && !isAtBottom ? (
-        <Button onClick={scrollToBottom} type="button" className="absolute bottom-4 right-8 rounded-full ">New Messages</Button>
+        <Button
+          onClick={scrollToBottom}
+          type="button"
+          className="absolute bottom-4 right-8 rounded-full "
+        >
+          New Messages
+        </Button>
       ) : null}
     </div>
   );
