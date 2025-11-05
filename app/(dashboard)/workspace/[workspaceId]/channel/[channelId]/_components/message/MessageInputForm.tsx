@@ -58,7 +58,7 @@ export function MessageInputForm({ channelId }: MessageInputFormProps) {
   function onSubmit(data: CreateMessageSchemaType) {
     createMessageMutation.mutate({
       ...data,
-      imageUrl: upload.stagedUrl ?? undefined,
+      imageUrl: upload.stagedUrl.trim() ? upload.stagedUrl : undefined,
     });
   }
   return (
