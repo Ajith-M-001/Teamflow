@@ -24,6 +24,7 @@ export const createMessage = base
   .input(createMessageSchema)
   .output(z.custom<Message>())
   .handler(async ({ context, input, errors }) => {
+    console.log("input13", input);
     // verify the channel belongs to the user's organization
 
     const channel = await prisma.channel.findFirst({

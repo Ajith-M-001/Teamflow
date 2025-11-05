@@ -7,6 +7,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageItem } from "./message/MessageItem";
 import { nullable } from "zod";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/general/EmptyState";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 export function MessageList() {
   const { channelId } = useParams<{ channelId: string }>();
@@ -21,7 +23,7 @@ export function MessageList() {
     input: (pageParams: string | undefined) => ({
       channelId: channelId,
       cursor: pageParams,
-      limit: 10,
+      limit: 5,
     }),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -179,8 +181,13 @@ export function MessageList() {
         onScroll={handleScroll}
       >
         {isEmpty ? (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <p className="text-sm text-muted-foreground">No messages yet.</p>
+          <div className="flex h-full pt-4">
+            <EmptyState
+              title="No messages yet"
+              description="start the conversation by sending the first message"
+              buttonText="Send a message"
+              href="#"
+            />
           </div>
         ) : (
           items?.map((msg) => <MessageItem key={msg.id} message={msg} />)
@@ -189,7 +196,18 @@ export function MessageList() {
         <div ref={bottomRef}></div>
       </div>
 
-      {newMessages && !isAtBottom ? (
+      {isFetchingNextPage && (
+        <div className="pointer-events-none absolute top-0 left-0 right-0 z-20 flex items-center justify-center py-2">
+          <div className="flex text-center gap-2 rounded-md bg-linear-to-b from-white/10 to-transparent dark:from-neutral-900/80 backdrop-blur px-3 py-1">
+            <Loader2 className=" h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              Loading more...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* {newMessages && !isAtBottom ? (
         <Button
           onClick={scrollToBottom}
           type="button"
@@ -197,7 +215,18 @@ export function MessageList() {
         >
           New Messages
         </Button>
-      ) : null}
+      ) : null} */}
+
+      {(!isAtBottom || newMessages) && (
+        <Button 
+          onClick={scrollToBottom}
+          className="absolute bottom-4 right-5 z-10 rounded-full hover:shadow-xl transition-all duration-100"
+          type="button"
+          size={"sm"}
+        >
+          <ChevronDown className="size-4" />
+        </Button>
+      )}
     </div>
   );
 }
