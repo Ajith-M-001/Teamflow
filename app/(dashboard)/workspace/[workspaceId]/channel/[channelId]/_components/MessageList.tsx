@@ -1,7 +1,7 @@
 "use client";
 
 import { orpc } from "@/lib/orpc";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageItem } from "./message/MessageItem";
@@ -38,6 +38,8 @@ export function MessageList() {
       pageParams: [...data.pageParams].reverse(),
     }),
   });
+
+  const { data: {user} } = useSuspenseQuery(orpc.workspace.list.queryOptions())
 
   const {
     data,
@@ -191,7 +193,7 @@ export function MessageList() {
             />
           </div>
         ) : (
-          items?.map((msg) => <MessageItem key={msg.id} message={msg} />)
+          items?.map((msg) => <MessageItem currentUserId={user.id} key={msg.id} message={msg} />)
         )}
 
         <div ref={bottomRef}></div>
