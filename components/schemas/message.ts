@@ -20,5 +20,20 @@ export const createMessageSchema = z.object({
   imageUrl: z.url().optional(),
 });
 
+export const updateMessageSchema = z.object({
+  messageId: z.string(),
+  content: z
+    .string()
+    .min(
+      MESSAGE_LIMITS.MIN,
+      `Message must be at least ${MESSAGE_LIMITS.MIN} character`
+    )
+    .max(
+      MESSAGE_LIMITS.MAX,
+      `Message must be at most ${MESSAGE_LIMITS.MAX} characters`
+    ),
+});
+
 export type CreateMessageSchemaType = z.infer<typeof createMessageSchema>;
+export type UpdateMessageSchemaType = z.infer<typeof updateMessageSchema>;
 export { MESSAGE_LIMITS };

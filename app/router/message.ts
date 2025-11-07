@@ -5,10 +5,14 @@ import { standardSecurityMiddleware } from "../middlewares/arcjet/standard";
 import { writeSecurityMiddleware } from "../middlewares/arcjet/write";
 import z from "zod";
 import prisma from "@/lib/db";
-import { createMessageSchema } from "@/components/schemas/message";
+import {
+  createMessageSchema,
+  updateMessageSchema,
+} from "@/components/schemas/message";
 import { getAvatar } from "@/lib/get-avatar";
 import { Message } from "@/prisma/generated/prisma";
 import { readSecurityMiddleware } from "../middlewares/arcjet/read";
+import { Input } from "@/components/ui/input";
 
 export const createMessage = base
   .use(requiredAuthMiddleware)
@@ -113,4 +117,57 @@ export const listMessages = base
       messages.length === limit ? messages[messages.length - 1].id : undefined;
 
     return { items: messages, nextCursor };
+  });
+
+export const updateMessage = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .use(standardSecurityMiddleware)
+  .use(writeSecurityMiddleware)
+  .route({
+    method: "PUT",
+    path: "/messages/:messageId",
+    summary: "update a message",
+    tags: ["message"],
+  })
+  .input(updateMessageSchema)
+  .output(
+    z.object({
+      message: z.custom<Message>(),
+      canEdit: z.boolean(),
+    })
+  )
+  .handler(async ({ context, input, errors }) => {
+    const message = await prisma.message.findFirst({
+      where: {
+        id: input.messageId,
+        channel: {
+          workspaceId: context.workspace.orgCode,
+        },
+      },
+      select: {
+        id: true,
+        authorId: true,
+      },
+    });
+
+    if (!message) {
+      throw errors.NOT_FOUND();
+    }
+
+    if (message.authorId !== context.user.id) {
+      throw errors.FORBIDDEN();
+    }
+
+    const updated = await prisma.message.update({
+      where: { id: input.messageId },
+      data: {
+        content: input.content,
+      },
+    });
+
+    return {
+      message: updated,
+      canEdit: updated.authorId === context.user.id,
+    };
   });
