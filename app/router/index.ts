@@ -1,7 +1,12 @@
 //app\router\index.ts
 import { createWorkspaces, listWorkspaces } from "@/app/router/workspace";
 import { createChannel, getChannel, listChannels } from "./channel";
-import { createMessage, listMessages, updateMessage } from "./message";
+import {
+  createMessage,
+  listMessages,
+  listThreadReplies,
+  updateMessage,
+} from "./message";
 import { inviteMember, listMembers } from "./member";
 
 export const router = {
@@ -22,5 +27,8 @@ export const router = {
     create: createMessage,
     list: listMessages,
     update: updateMessage,
+    thread: {
+      list: listThreadReplies,
+    },
   },
 };

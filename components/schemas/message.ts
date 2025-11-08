@@ -18,6 +18,7 @@ export const createMessageSchema = z.object({
       `Message must be at most ${MESSAGE_LIMITS.MAX} characters`
     ),
   imageUrl: z.url().optional(),
+  threadId: z.string().optional(),
 });
 
 export const updateMessageSchema = z.object({

@@ -9,9 +9,11 @@ import { orpc } from "@/lib/orpc";
 import { KindeUser } from "@kinde-oss/kinde-auth-nextjs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThreadSidebar } from "./_components/thread/ThreadSidebar";
+import { ThreadProvider, useThread } from "@/providers/threadProvider";
 
 const ChannelPageMain = () => {
   const { channelId } = useParams<{ channelId: string }>();
+  const { isThreadOpen } = useThread();
   const { data, error, isLoading } = useQuery(
     orpc.channel.get.queryOptions({ input: { channelId } })
   );
@@ -54,9 +56,21 @@ const ChannelPageMain = () => {
         </div>
       </div>
 
-      <ThreadSidebar />
+      {isThreadOpen && (
+        <ThreadSidebar
+          user={data?.currentUser as KindeUser<Record<string, unknown>>}
+        />
+      )}
     </div>
   );
 };
 
-export default ChannelPageMain;
+const ThisIsTheChannelPage = () => {
+  return (
+    <ThreadProvider>
+      <ChannelPageMain />
+    </ThreadProvider>
+  );
+};
+
+export default ThisIsTheChannelPage;
