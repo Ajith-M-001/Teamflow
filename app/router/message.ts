@@ -3,16 +3,50 @@ import { requiredAuthMiddleware } from "../middlewares/auth";
 import { requiredWorkspaceMiddleware } from "../middlewares/workspace";
 import { standardSecurityMiddleware } from "../middlewares/arcjet/standard";
 import { writeSecurityMiddleware } from "../middlewares/arcjet/write";
-import z from "zod";
+import z, { emoji } from "zod";
 import prisma from "@/lib/db";
 import {
   createMessageSchema,
+  GroupedReactionSchema,
+  GroupedReactionSchemaType,
+  toggleReactionSchema,
   updateMessageSchema,
 } from "@/components/schemas/message";
 import { getAvatar } from "@/lib/get-avatar";
 import { Message } from "@/prisma/generated/prisma";
 import { readSecurityMiddleware } from "../middlewares/arcjet/read";
 import { MessageListItem } from "@/lib/types";
+
+function groupReactions(
+  reactions: { emoji: string; userId: string }[],
+  userId: string
+): GroupedReactionSchemaType[] {
+  const reactionMap = new Map<
+    string,
+    { count: number; reactedByMe: boolean }
+  >();
+
+  for (const reaction of reactions) {
+    const existing = reactionMap.get(reaction.emoji);
+    if (existing) {
+      existing.count++;
+      if (reaction.userId === userId) {
+        existing.reactedByMe = true;
+      }
+    } else {
+      reactionMap.set(reaction.emoji, {
+        count: 1,
+        reactedByMe: reaction.userId === userId,
+      });
+    }
+  }
+
+  return Array.from(reactionMap.entries()).map(([emoji, data]) => ({
+    emoji,
+    count: data.count,
+    reactedByMe: data.reactedByMe,
+  }));
+}
 
 export const createMessage = base
   .use(requiredAuthMiddleware)
@@ -139,11 +173,24 @@ export const listMessages = base
             replies: true,
           },
         },
+        messageReaction: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
       },
     });
 
     const items: MessageListItem[] = messages.map((message) => ({
       ...message,
+      reactions: groupReactions(
+        message.messageReaction.map((r) => ({
+          emoji: r.emoji,
+          userId: r.userId,
+        })),
+        context.user.id
+      ),
       repliesCount: message._count.replies,
     }));
 
@@ -259,4 +306,99 @@ export const listThreadReplies = base
     }));
 
     return { parent, messages };
+  });
+
+export const toggleReaction = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .use(standardSecurityMiddleware)
+  .use(writeSecurityMiddleware)
+  .route({
+    method: "PUT",
+    path: "/messages/:messageId/reactions",
+    summary: "toggle a reaction",
+    tags: ["messages"],
+  })
+  .input(toggleReactionSchema)
+  .output(
+    z.object({
+      messageId: z.string(),
+      reactions: z.array(GroupedReactionSchema),
+    })
+  )
+  .handler(async ({ context, input, errors }) => {
+    const message = await prisma.message.findFirst({
+      where: {
+        id: input.messageId,
+        channel: {
+          workspaceId: context.workspace.orgCode,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!message) {
+      throw errors.NOT_FOUND();
+    }
+
+    const inserted = await prisma.messageReaction.createMany({
+      data: [
+        {
+          emoji: input.emoji,
+          messageId: input.messageId,
+          userId: context.user.id,
+          userName: context.user.given_name ?? "john doe",
+          userAvatar: getAvatar(
+            context.user.picture,
+            context.user.email ?? "unknown@user.com"
+          ),
+          userEmail: context.user.email ?? "unknown@user.com",
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    if (inserted.count === 0) {
+      await prisma.messageReaction.deleteMany({
+        where: {
+          messageId: input.messageId,
+          userId: context.user.id,
+          emoji: input.emoji,
+        },
+      });
+    }
+
+    const updated = await prisma.message.findUnique({
+      where: {
+        id: input.messageId,
+      },
+      include: {
+        messageReaction: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+    });
+
+    if (!updated) throw errors.NOT_FOUND();
+
+    return {
+      messageId: updated.id,
+      reactions: groupReactions(
+        (updated.messageReaction ?? []).map((r) => ({
+          emoji: r.emoji,
+          userId: r.userId,
+        })),
+        context.user.id
+      ),
+    };
   });
