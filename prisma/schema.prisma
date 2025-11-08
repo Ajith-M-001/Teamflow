@@ -32,11 +32,16 @@ model Message {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  channelId String // ✅ Foreign key to Channel
-  channel   Channel @relation(fields: [channelId], references: [id])
+  channelId String? // ✅ Foreign key to Channel
+  channel   Channel? @relation(fields: [channelId], references: [id])
 
   authorId     String
   authorEmail  String
   authorName   String
   authorAvatar String
+
+  //Thread relations
+  threadId      String?
+  parentMessage Message?  @relation("MessageThread", fields: [threadId], references: [id], onDelete: Cascade)
+  replies       Message[] @relation("MessageThread")
 }
