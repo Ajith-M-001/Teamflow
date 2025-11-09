@@ -83,12 +83,13 @@ export function MessageItem({ message, currentUserId }: MessageItemProps) {
                   className=" rounded-md max-h-80 w-auto object-contain"
                 />
               </div>
-              )}
-              
-               {/* Reactions */}
-               <ReactionsBar reactions={message.reactions} messageId={message.id}/>
-
-
+            )}
+            {/* Reactions */}
+            <ReactionsBar
+              context={{ type: "list", channelId: message.channelId! }}
+              reactions={message.reactions}
+              messageId={message.id}
+            />
             {message?.repliesCount > 0 && (
               <button
                 onMouseEnter={prefetchThread}

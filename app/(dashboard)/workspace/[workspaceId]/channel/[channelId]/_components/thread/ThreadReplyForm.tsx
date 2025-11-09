@@ -52,7 +52,7 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyProps) {
 
         const previous = queryclient.getQueryData(listOptions.queryKey);
 
-        const optimistic: Message = {
+        const optimistic: MessageListItem = {
           id: `optimistic-${crypto.randomUUID()}`,
           content: data.content,
           createdAt: new Date(),
@@ -64,6 +64,8 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyProps) {
           channelId: data.channelId,
           threadId: data.threadId!,
           imageUrl: data.imageUrl ?? null,
+          repliesCount: 0,
+          reactions: [],
         };
 
         queryclient.setQueryData(listOptions.queryKey, (old) => {

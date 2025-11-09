@@ -271,8 +271,8 @@ export const listThreadReplies = base
   )
   .output(
     z.object({
-      parent: z.custom<Message>(),
-      messages: z.array(z.custom<Message>()),
+      parent: z.custom<MessageListItem>(),
+      messages: z.array(z.custom<MessageListItem>()),
     })
   )
   .handler(async ({ context, input, errors }) => {
@@ -283,6 +283,19 @@ export const listThreadReplies = base
           workspaceId: context.workspace.orgCode,
         },
       },
+      include: {
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+        messageReaction: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!parentRow) {
@@ -290,19 +303,68 @@ export const listThreadReplies = base
     }
 
     //fetch all thread replies
-    const replies = await prisma.message.findMany({
+    const messagesQuery = await prisma.message.findMany({
       where: {
         threadId: input.messageId,
       },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      include: {
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+        messageReaction: {
+          select: {
+            emoji: true,
+            userId: true,
+          },
+        },
+      },
     });
 
-    const parent = {
-      ...parentRow,
+    const parent: MessageListItem = {
+      id: parentRow.id,
+      content: parentRow.content,
+      imageUrl: parentRow.imageUrl,
+      authorAvatar: parentRow.authorAvatar,
+      authorEmail: parentRow.authorEmail,
+      authorId: parentRow.authorId,
+      authorName: parentRow.authorName,
+      channelId: parentRow.channelId,
+      createdAt: parentRow.createdAt,
+      updatedAt: parentRow.updatedAt,
+      threadId: parentRow.threadId,
+      repliesCount: parentRow._count.replies,
+      reactions: groupReactions(
+        parentRow.messageReaction.map((r) => ({
+          emoji: r.emoji,
+          userId: r.userId,
+        })),
+        context.user.id
+      ),
     };
 
-    const messages = replies.map((reply) => ({
-      ...reply,
+    const messages: MessageListItem[] = messagesQuery.map((m) => ({
+      id: m.id,
+      content: m.content,
+      imageUrl: m.imageUrl,
+      authorAvatar: m.authorAvatar,
+      authorEmail: m.authorEmail,
+      authorId: m.authorId,
+      authorName: m.authorName,
+      channelId: m.channelId,
+      createdAt: m.createdAt,
+      updatedAt: m.updatedAt,
+      threadId: m.threadId,
+      repliesCount: m._count.replies,
+      reactions: groupReactions(
+        m.messageReaction.map((r) => ({
+          emoji: r.emoji,
+          userId: r.userId,
+        })),
+        context.user.id
+      ),
     }));
 
     return { parent, messages };
