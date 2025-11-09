@@ -2,12 +2,15 @@ import { SafeContent } from "@/components/rich-text-editor/SafeContent";
 import { Message } from "@/prisma/generated/prisma";
 import Image from "next/image";
 import React from "react";
+import { ReactionsBar } from "../reaction/ReactionsBar";
+import { MessageListItem } from "@/lib/types";
 
 interface ThreadReplyProps {
-  message: Message
+  message: MessageListItem;
+  selectedThreadId: string;
 }
 
-export function ThreadReply({ message }: ThreadReplyProps) {
+export function ThreadReply({ message, selectedThreadId }: ThreadReplyProps) {
   return (
     <div className="flex space-x-3 p-3 hover:bg-muted/30 rounded-lg">
       <Image
@@ -31,23 +34,28 @@ export function ThreadReply({ message }: ThreadReplyProps) {
           </span>
         </div>
 
-       
+        <SafeContent
+          className="text-sm wrap-break-word prose dark:prose-invert max-w-none marker:text-primary"
+          content={JSON.parse(message.content)}
+        />
 
-        <SafeContent className="text-sm wrap-break-word prose dark:prose-invert max-w-none marker:text-primary" content={JSON.parse(message.content)}/>
+        {message.imageUrl && (
+          <div className="mt-2">
+            <Image
+              src={message.imageUrl}
+              alt="Image"
+              width={500}
+              height={500}
+              className="rounded-md max-h-80 object-contain w-auto"
+            />
+          </div>
+        )}
 
-        {
-          message.imageUrl && (
-            <div className="mt-2">
-              <Image
-                src={message.imageUrl}
-                alt="Image"
-                width={500}
-                height={500}
-                className="rounded-md max-h-80 object-contain w-auto"
-              />
-            </div>
-          )
-        }
+        <ReactionsBar
+          reactions={message.reactions}
+          messageId={message.id}
+          context={{ type: "thread", threadId: selectedThreadId }}
+        />
       </div>
     </div>
   );

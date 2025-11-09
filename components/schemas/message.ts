@@ -35,6 +35,20 @@ export const updateMessageSchema = z.object({
     ),
 });
 
+
+export const toggleReactionSchema = z.object({
+  messageId: z.string(),
+  emoji: z.string().min(1),
+});
+
+export const GroupedReactionSchema = z.object({
+  emoji: z.string(),
+  count: z.number(),
+  reactedByMe: z.boolean(),
+})
+
+export type GroupedReactionSchemaType = z.infer<typeof GroupedReactionSchema>;
+export type ToggleReactionSchemaType = z.infer<typeof toggleReactionSchema>;
 export type CreateMessageSchemaType = z.infer<typeof createMessageSchema>;
 export type UpdateMessageSchemaType = z.infer<typeof updateMessageSchema>;
 export { MESSAGE_LIMITS };

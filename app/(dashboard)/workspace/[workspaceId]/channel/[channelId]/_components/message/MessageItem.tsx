@@ -9,6 +9,7 @@ import { EditMessage } from "../toolbar/EditMessage";
 import { useThread } from "@/providers/threadProvider";
 import { orpc } from "@/lib/orpc";
 import { useQueryClient } from "@tanstack/react-query";
+import { ReactionsBar } from "../reaction/ReactionsBar";
 
 interface MessageItemProps {
   message: MessageListItem;
@@ -83,6 +84,12 @@ export function MessageItem({ message, currentUserId }: MessageItemProps) {
                 />
               </div>
             )}
+            {/* Reactions */}
+            <ReactionsBar
+              context={{ type: "list", channelId: message.channelId! }}
+              reactions={message.reactions}
+              messageId={message.id}
+            />
             {message?.repliesCount > 0 && (
               <button
                 onMouseEnter={prefetchThread}
