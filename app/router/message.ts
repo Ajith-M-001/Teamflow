@@ -191,7 +191,7 @@ export const listMessages = base
         })),
         context.user.id
       ),
-      repliesCount: message._count.replies,
+      replyCount: message._count.replies,
     }));
 
     const nextCursor =
@@ -335,7 +335,7 @@ export const listThreadReplies = base
       createdAt: parentRow.createdAt,
       updatedAt: parentRow.updatedAt,
       threadId: parentRow.threadId,
-      repliesCount: parentRow._count.replies,
+      replyCount: parentRow._count.replies,
       reactions: groupReactions(
         parentRow.messageReaction.map((r) => ({
           emoji: r.emoji,
@@ -357,7 +357,7 @@ export const listThreadReplies = base
       createdAt: m.createdAt,
       updatedAt: m.updatedAt,
       threadId: m.threadId,
-      repliesCount: m._count.replies,
+      replyCount: m._count.replies,
       reactions: groupReactions(
         m.messageReaction.map((r) => ({
           emoji: r.emoji,

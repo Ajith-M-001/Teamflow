@@ -9,6 +9,7 @@ import {
   updateMessage,
 } from "./message";
 import { inviteMember, listMembers } from "./member";
+import { generateThreadSummary } from "./ai";
 
 export const router = {
   workspace: {
@@ -33,6 +34,14 @@ export const router = {
     },
     reaction: {
       toggle: toggleReaction,
+    },
+  },
+  ai: {
+    // compose: {
+    //   generate:,
+    // },
+    thread: {
+      summary: { generate: generateThreadSummary },
     },
   },
 };

@@ -64,7 +64,7 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyProps) {
           channelId: data.channelId,
           threadId: data.threadId!,
           imageUrl: data.imageUrl ?? null,
-          repliesCount: 0,
+          replyCount: 0,
           reactions: [],
         };
 
@@ -85,7 +85,7 @@ export function ThreadReplyForm({ threadId, user }: ThreadReplyProps) {
                if (item.id === threadId) {
                  return {
                    ...item,
-                   repliesCount: item.repliesCount + 1,
+                   replyCount: item.replyCount + 1,
                  };
                }
                return item;
