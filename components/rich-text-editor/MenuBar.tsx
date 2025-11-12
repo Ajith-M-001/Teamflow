@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { ComposeAssistant } from "./ComposeAssistant";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -37,12 +38,15 @@ export function MenuBar({ editor }: MenuBarProps) {
         isOrderedList: editorInstance.isActive("orderedList"),
         canUndo: editorInstance.can().undo(),
         canRedo: editorInstance.can().redo(),
+        currentContent : editorInstance.getJSON(),
       };
     },
   });
   if (!editor) {
     return null;
   }
+
+  
 
   return (
     <div className="border border-input border-t-0 border-x-0 rounded-t-lg p-2 bg-card flex flex- gap-1 items-center">
@@ -117,8 +121,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleCodeBlock().run()
                 }
                 className={cn(
-                  editorState?.isCodeBlock &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isCodeBlock && "bg-muted text-muted-foreground"
                 )}
               >
                 <Code size={16} />
@@ -140,8 +143,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleBulletList().run()
                 }
                 className={cn(
-                  editorState?.isBulletList &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isBulletList && "bg-muted text-muted-foreground"
                 )}
               >
                 <ListIcon />
@@ -160,8 +162,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleOrderedList().run()
                 }
                 className={cn(
-                  editorState?.isOrderedList &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isOrderedList && "bg-muted text-muted-foreground"
                 )}
               >
                 <ListOrdered />
@@ -206,6 +207,10 @@ export function MenuBar({ editor }: MenuBarProps) {
               <p>Redo</p>
             </TooltipContent>
           </Tooltip>
+        </div>
+       <div className="w-px h-6 bg-border mx-2"></div>
+        <div className="flex flex-wrap gap-1 ">
+          <ComposeAssistant content={ JSON.stringify(editorState?.currentContent)} />
         </div>
       </TooltipProvider>
     </div>

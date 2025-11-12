@@ -21,6 +21,15 @@ const system = [
   "If the context is insufficient, return a single-sentence summary and omit the bullet list.",
 ].join("\n");
 
+const ComposeSystem = [
+  "You are an expert rewriting assistant. You are not a chatbot.",
+  "Task: Rewrite the provided content to be clearer and better structured while preserving meaning, facts, terminology, and names.",
+  "Do not address the user, ask questions, add greetings, or include commentary.",
+  "Keep existing links/mentions intact. Do not change code blocks or inline code content.",
+  "Output strictly in Markdown (paragraphs and optional bullet lists). Do not output any HTML or images.",
+  "Return ONLY the rewritten content. No preamble, headings, or closing remarks.",
+].join("\n");
+
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY as string,
 });
@@ -121,5 +130,33 @@ export const generateThreadSummary = base
     });
 
     // Return a streaming response to the frontend
+    return streamToEventIterator(result.toUIMessageStream());
+  });
+
+export const generateCompose = base
+  .use(requiredAuthMiddleware)
+  .use(requiredWorkspaceMiddleware)
+  .route({
+    method: "POST",
+    path: "/ai/compose/generate",
+    summary: "compose message",
+    tags: ["ai"],
+  })
+  .input(
+    z.object({
+      content: z.string(),
+    })
+  )
+  .handler(async ({ context, input, errors }) => {
+    const markdown = await jsonToMarkdown(input.content);
+    const result = streamText({
+      model: openrouter.chat(MODEL_ID),
+      messages: [
+        { role: "system", content: ComposeSystem },
+        { role: "user", content: markdown },
+      ],
+      temperature: 0,
+    });
+
     return streamToEventIterator(result.toUIMessageStream());
   });

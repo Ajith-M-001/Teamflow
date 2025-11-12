@@ -131,7 +131,7 @@ export function ThreadSidebar({ user }: ThreadSidebarProps) {
           <span>Thread</span>
         </div>
         <div className="flex items-center gap-2">
-          <SummarizeThread messageId="" />
+          <SummarizeThread messageId={selectedThreadId!} />
           <Button
             onClick={closeThread}
             type="button"
