@@ -146,7 +146,7 @@ export function ReactionsBar({
   };
   return (
     <div className="mt-1 flex items-center gap-1">
-      {reactions.map((reaction) => (
+      {reactions?.map((reaction) => (
         <Button
           onClick={() => handleToggle(reaction.emoji)}
           key={reaction.emoji}

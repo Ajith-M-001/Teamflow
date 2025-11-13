@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { ComposeAssistant } from "./ComposeAssistant";
+import { markDownToJson } from "@/lib/markdown-to-json";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -46,8 +47,15 @@ export function MenuBar({ editor }: MenuBarProps) {
     return null;
   }
 
-  
-
+  const handleAcceptCompose = (markdown: string) => {
+    try {
+      const json = markDownToJson(markdown);
+      editor.commands.setContent(json);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+ 
   return (
     <div className="border border-input border-t-0 border-x-0 rounded-t-lg p-2 bg-card flex flex- gap-1 items-center">
       <TooltipProvider>
@@ -210,7 +218,7 @@ export function MenuBar({ editor }: MenuBarProps) {
         </div>
        <div className="w-px h-6 bg-border mx-2"></div>
         <div className="flex flex-wrap gap-1 ">
-          <ComposeAssistant content={ JSON.stringify(editorState?.currentContent)} />
+          <ComposeAssistant onAccept={handleAcceptCompose} content={ JSON.stringify(editorState?.currentContent)} />
         </div>
       </TooltipProvider>
     </div>
