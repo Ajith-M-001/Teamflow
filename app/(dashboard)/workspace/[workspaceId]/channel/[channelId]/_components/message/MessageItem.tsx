@@ -90,7 +90,7 @@ export function MessageItem({ message, currentUserId }: MessageItemProps) {
               reactions={message.reactions}
               messageId={message.id}
             />
-            {message?.repliesCount > 0 && (
+            {message?.replyCount > 0 && (
               <button
                 onMouseEnter={prefetchThread}
                 onFocus={prefetchThread}
@@ -100,8 +100,8 @@ export function MessageItem({ message, currentUserId }: MessageItemProps) {
               >
                 <MessagesSquare className="w-4 h-4" />
                 <span>
-                  {message.repliesCount}{" "}
-                  {message.repliesCount === 1 ? "reply" : "replies"}
+                  {message.replyCount}{" "}
+                  {message.replyCount === 1 ? "reply" : "replies"}
                 </span>
               </button>
             )}

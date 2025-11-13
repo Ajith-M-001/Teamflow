@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { ComposeAssistant } from "./ComposeAssistant";
+import { markDownToJson } from "@/lib/markdown-to-json";
 
 interface MenuBarProps {
   editor: Editor | null;
@@ -37,6 +39,7 @@ export function MenuBar({ editor }: MenuBarProps) {
         isOrderedList: editorInstance.isActive("orderedList"),
         canUndo: editorInstance.can().undo(),
         canRedo: editorInstance.can().redo(),
+        currentContent : editorInstance.getJSON(),
       };
     },
   });
@@ -44,6 +47,15 @@ export function MenuBar({ editor }: MenuBarProps) {
     return null;
   }
 
+  const handleAcceptCompose = (markdown: string) => {
+    try {
+      const json = markDownToJson(markdown);
+      editor.commands.setContent(json);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+ 
   return (
     <div className="border border-input border-t-0 border-x-0 rounded-t-lg p-2 bg-card flex flex- gap-1 items-center">
       <TooltipProvider>
@@ -117,8 +129,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleCodeBlock().run()
                 }
                 className={cn(
-                  editorState?.isCodeBlock &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isCodeBlock && "bg-muted text-muted-foreground"
                 )}
               >
                 <Code size={16} />
@@ -140,8 +151,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleBulletList().run()
                 }
                 className={cn(
-                  editorState?.isBulletList &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isBulletList && "bg-muted text-muted-foreground"
                 )}
               >
                 <ListIcon />
@@ -160,8 +170,7 @@ export function MenuBar({ editor }: MenuBarProps) {
                   editor.chain().focus().toggleOrderedList().run()
                 }
                 className={cn(
-                  editorState?.isOrderedList &&
-                    "bg-muted text-muted-foreground"
+                  editorState?.isOrderedList && "bg-muted text-muted-foreground"
                 )}
               >
                 <ListOrdered />
@@ -206,6 +215,10 @@ export function MenuBar({ editor }: MenuBarProps) {
               <p>Redo</p>
             </TooltipContent>
           </Tooltip>
+        </div>
+       <div className="w-px h-6 bg-border mx-2"></div>
+        <div className="flex flex-wrap gap-1 ">
+          <ComposeAssistant onAccept={handleAcceptCompose} content={ JSON.stringify(editorState?.currentContent)} />
         </div>
       </TooltipProvider>
     </div>

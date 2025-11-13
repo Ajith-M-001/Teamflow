@@ -23,7 +23,7 @@ export function MessageList() {
     input: (pageParams: string | undefined) => ({
       channelId: channelId,
       cursor: pageParams,
-      limit: 5,
+      limit: 30,
     }),
     queryKey: ["messages.list", channelId],
     initialPageParam: undefined,
